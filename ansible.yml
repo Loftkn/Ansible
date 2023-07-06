@@ -1,0 +1,34 @@
+- hosts: all
+  become : true
+  tasks:
+    - name: Check version of service
+      shell: java -version
+      register: java_output
+      changed_when: false
+      failed_when: false
+
+    - name: Print Java version
+      debug:
+        var: java_output
+
+    - name: Parse Java version
+      set_fact:
+        java_version: "{{ java_output.stdout | regex_findall('openjdk version \"(.*?)\"') | first }}"
+      when: java_output.stdout is search('openjdk')
+
+    - name: Print Java version
+      debug:
+        var: java_version
+      when: java_version is defined or java_version is not none 
+
+    - name: Install necessary packages
+      apt:
+        pkg:
+          - curl
+          - python3-pip
+          - net-tools
+          - vim
+          - openjdk-8-jre
+        state: latest
+        update_cache: true
+          #when: java_output.stdout is not defined or java_output.stdout is none 
